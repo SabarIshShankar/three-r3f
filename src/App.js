@@ -25,3 +25,38 @@ function Sphere({ geometry, x, y, x, s }) {
     </Mesh>
   );
 }
+
+function RandomSpheres() {
+  const [geometry] = useState(() => new THREE.SphereGeometry(1, 32, 32), []);
+  const data = useMemo(() => {
+    return new Array(15).fill().map((_, i) => ({
+      x: Math.random() * 100 - 50,
+      y: Math.random() * 100 - 50,
+      z: Math.random() * 100 - 50,
+      s: Math.random() + 10
+    }));
+  }, []);
+  return data.map((props, i) => (
+    <Sphere key={i} {...props} geometry={geometry} />
+  ));
+}
+
+function Bloom({ children }) {
+  const { gl, camera, size } = useThree();
+  const [scene, setScene] = useState();
+  const composer = useRef();
+  useEffect(
+    () => void scene && composer.current.setSize(size.width, size.height),
+    [size]
+  );
+  useFrame(() => scene && composer.current.render(), 1);
+  return (
+    <>
+      <scene ref={setScene}>{children}</scene>
+      <effectComposer ref={composer} agrs={[gl]}>
+        <renderPass attachArray="passes" scene={scene} camera={camera} />
+        <unrealBloomPass attachArray="passes" args={[undefined, 1.5, 1, 0]} />
+      </effectComposer>
+    </>
+  );
+}
